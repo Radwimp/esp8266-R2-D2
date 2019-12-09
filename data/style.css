@@ -1,0 +1,182 @@
+.modal-mask {
+    position: fixed;
+    z-index: 9998;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, .5);
+    display: table;
+    transition: opacity .3s ease;
+}
+
+.modal-wrapper {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.modal-container {
+    width: 300px;
+    margin: 0px auto;
+    padding: 20px 30px;
+    background-color: #fff;
+    border-radius: 2px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
+    transition: all .3s ease;
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+.modal-enter {
+    opacity: 0;
+}
+
+.modal-leave-active {
+    opacity: 0;
+}
+
+.modal-enter .modal-container,
+.modal-leave-active .modal-container {
+    -webkit-transform: scale(1.1);
+    transform: scale(1.1);
+}
+
+.iframeAuthorization {
+    border: 0;
+    width: 150px;
+    height: 40px;
+    float: right;
+    display: none;
+}
+
+.connectionSubmit {
+    margin-top: 8px;
+}
+
+.closeButton {
+    float: right;
+}
+
+.lds-facebook {
+    display: inline-block;
+    position: relative;
+    width: 26px;
+    height: 33px;
+}
+
+.lds-facebook div {
+    display: inline-block;
+    position: absolute;
+    left: 6px;
+    width: 13px;
+    background: #cef;
+    animation: lds-facebook 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+}
+
+.lds-facebook div:nth-child(1) {
+    left: 6px;
+    animation-delay: -0.24s;
+}
+
+.lds-facebook div:nth-child(2) {
+    left: 26px;
+    animation-delay: -0.12s;
+}
+
+.lds-facebook div:nth-child(3) {
+    left: 45px;
+    animation-delay: 0;
+}
+
+@keyframes lds-facebook {
+    0% {
+        top: 6px;
+        height: 26px;
+    }
+    50%, 100% {
+        top: 19px;
+        height: 16px;
+    }
+}
+
+#statusСonnection {
+    display: none;
+    padding-left: 60px;
+}
+
+.disabled {
+    pointer-events: none;
+}
+
+.header {
+    overflow: hidden;
+    background-color: #f1f1f1;
+    padding: 20px 10px;
+}
+
+.header-right {
+    float: right;
+}
+
+.header-left {
+    float: left;
+}
+
+.header header-left a:hover {
+    background-color: #ddd;
+    color: black;
+}
+
+.header a.active {
+    background-color: dodgerblue;
+    color: white;
+}
+
+.header a {
+    margin: 2px;
+    float: left;
+    color: black;
+    text-align: center;
+    padding: 12px;
+    text-decoration: none;
+    font-size: 18px;
+    line-height: 25px;
+    border-radius: 4px;
+}
+
+.header header-right a {
+    pointer-events: none;
+    cursor: pointer;
+}
+
+body {
+    margin: 0;
+}
+
+.YAC {
+    padding: 10px;
+}
+
+.network {
+    cursor: pointer;
+    margin: 4px;
+    background-color: dodgerblue;
+    color: white;
+    text-align: center;
+    padding: 12px;
+    text-decoration: none;
+    font-size: 18px;
+    line-height: 25px;
+    border-radius: 4px;
+}
+
+.SWF {
+    display: inline-block;
+    margin: 20px;
+    color: black;
+    text-align: center;
+    font-size: 22px;
+}
+
+.networkLi{
+    padding: 15px;
+}
