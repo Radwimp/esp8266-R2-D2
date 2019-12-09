@@ -111,11 +111,11 @@ String Model::getData() {
 }
 
 String Model::getLocalIP() {
-  char wiFilocalIP[16];
+  char wifiLocalIP[16];
   String json;
   DynamicJsonDocument doc(64);
-  sprintf(wiFilocalIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-  doc["wiFiLocalIP"] = wiFilocalIP;
+  sprintf(wifiLocalIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+  doc["wifiLocalIP"] = wifiLocalIP;
   serializeJson(doc, json);
   return json;
 }
