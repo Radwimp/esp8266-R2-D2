@@ -8,6 +8,7 @@ AsyncWebServer server(80);
 
 void Controller::initialization () {
   this->mapping();
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
   server.begin();
   Serial.println("end initialization");
 }
