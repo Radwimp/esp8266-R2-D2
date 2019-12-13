@@ -1,12 +1,12 @@
 #include "Arduino.h"
 #include "Model.h"
 #include "Controller.h"
-#include <ESP8266WiFi.h>
-#include <NTPClient.h>
-#include <WiFiUdp.h>
-#include <ESPAsyncTCP.h>
-#include <FS.h>
-#include <ArduinoJson.h>
+#include "ESP8266WiFi.h"
+#include "NTPClient.h"
+#include "WiFiUdp.h"
+#include "ESPAsyncTCP.h"
+#include "FS.h"
+#include "ArduinoJson.h"
 #include "DHTesp.h"
 
 #define DHTpin 3
@@ -18,12 +18,20 @@ NTPClient timeClient(ntpUDP);
 
 String arrData[NUMBER_OF_RECORDS];
 int currentRecord;
+String Model::espSsid;
+String Model::espPassword;
 
 Controller controller;
 
 void Model::initialization (String espSsid, String espPassword) {
+  Model::espSsid = espSsid;
+  Model::espPassword = espPassword;
   this->checkSPIFFS();
-  WiFi.softAP(espSsid, espPassword);
+  
+  if (!WiFi.status()) {
+    WiFi.softAP(espSsid, espPassword);
+  };
+  
   controller.initialization();
   timeClient.begin();
   timeClient.setTimeOffset(3600*2);
@@ -121,7 +129,6 @@ String Model::getLocalIP() {
 }
 
 String Model::getFreeMemory() {
-  Serial.println(WiFi.scanNetworks());
   String json;
   DynamicJsonDocument doc(32);
   doc["freeMemory"] = ESP.getFreeHeap();
@@ -129,22 +136,24 @@ String Model::getFreeMemory() {
   return json;
 }
 
-String Model::scannerWiFi() {
+String Model::scanWiFi() {
   String json;
   DynamicJsonDocument doc(1024);
-  JsonArray data = doc.createNestedArray("networks");
-  int count = WiFi.scanComplete();
-  if (count == -2) {
+  JsonArray networks = doc.createNestedArray("networks");
+  int networksFound = WiFi.scanComplete();
+
+  if(networksFound == -2){
     WiFi.scanNetworks(true);
-  } else if (count) {
-    for (int i = 0; i < count; ++i) {
-      data.add(WiFi.SSID(i));
+  } else if (networksFound) {
+    for (int i = 0; i < networksFound; ++i){
+      networks.add(WiFi.SSID(i));
     }
     WiFi.scanDelete();
-    if (WiFi.scanComplete() == -2) {
+    if(WiFi.scanComplete() == -2){
       WiFi.scanNetworks(true);
     }
   }
+    
   serializeJson(doc, json);
   return json;
 }
@@ -152,12 +161,15 @@ String Model::scannerWiFi() {
 String Model::disconnectWiFi() {
   DynamicJsonDocument doc(32);
   String json;
+  
   if (WiFi.disconnect()) {
     doc["disconnectWiFi"] = "success";
+    WiFi.softAP(Model::espSsid, Model::espPassword);
   } else {
     doc["disconnectWiFi"] = "fail";
   };
-  serializeJson(doc, json);
+
+  serializeJson(doc, json); 
   return json;
 }
 
@@ -170,6 +182,7 @@ String Model::statusWiFi() {
 }
 
 String Model::authorization(String ssid, String password) {
+  WiFi.softAPdisconnect(true);
   WiFi.begin(ssid, password);
   return "connection";
 }

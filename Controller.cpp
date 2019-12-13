@@ -2,7 +2,7 @@
 #include "Controller.h"
 #include "Model.h"
 #include "View.h"
-#include <ESPAsyncWebServer.h>
+#include "ESPAsyncWebServer.h"
 
 AsyncWebServer server(80);
 
@@ -58,8 +58,8 @@ void Controller::mapping() {
     request->send(200, "application/json", Model::getFreeMemory());
   });
 
-  server.on("/scannerWiFi", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "application/json", Model::scannerWiFi());
+  server.on("/scanWiFi", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "application/json", Model::scanWiFi());
   });
 
   server.on("/disconnectWiFi", HTTP_GET, [](AsyncWebServerRequest * request) {

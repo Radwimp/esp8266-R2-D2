@@ -6,9 +6,11 @@
 class Model {
   public:
     void initialization(String ssid, String password);
+    static String espSsid;
+    static String espPassword;
     static String getFreeMemory();
     static String getLocalIP();
-    static String scannerWiFi();
+    static String scanWiFi();
     static String disconnectWiFi();
     static String statusWiFi();
     static String authorization(String ssid, String password);

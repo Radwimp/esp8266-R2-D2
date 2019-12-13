@@ -20,5 +20,4 @@ void loop() {
     model.dataRecording();
     previousMillis = currentMillis;
   }
-  delay(1000 * 60);
 }
