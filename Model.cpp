@@ -20,9 +20,7 @@ String arrData[NUMBER_OF_RECORDS];
 int currentRecord;
 String Model::espSsid;
 String Model::espPassword;
-
-int relayPin1 = 16;
-int relayPin2 = 4;
+int Model::interval = 1;
 
 Controller controller;
 
@@ -206,18 +204,10 @@ String Model::restartESP() {
   return json;
 }
 
-//String Model::switchRele1() {
-//  if (relayChecker == "true") {
-//    digitalWrite(relayPin1, HIGH);
-//  } else {
-//    digitalWrite(relayPin1, LOW);
-//  }
-//}
-//
-//String Model::switchRele2(String relayChecker) {
-//  if (relayChecker == "true") {
-//    digitalWrite(relayPin1, HIGH);
-//  } else {
-//    digitalWrite(relayPin1, LOW);
-//  }
-//}
+void Model::switchRele(int pin, bool enable) {
+    digitalWrite(pin, enable ? HIGH : LOW);  
+}
+
+void Model::changeInterval(int interval) {
+  Model::interval = interval;
+}

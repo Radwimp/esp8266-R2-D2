@@ -77,20 +77,29 @@ void Controller::mapping() {
   server.on("/getData", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "application/json", Model::getData());
   });
+  
+  server.on("/enableRelay1", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "application/json", Model::switchRelay(4, true));
+  });
+  
+  server.on("/disableRelay1", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "application/json", Model::switchRelay(4, false));
+  });
+  
+  server.on("/enableRelay2", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "application/json", Model::switchRelay(16, true));
+  });
+  
+  server.on("/disableRelay2", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "application/json", Model::switchRelay(16, false));
+  });
 
-//  server.on("/switchRele1", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    String ssid;
-//    if (request->hasArg("ssid"))
-//      ssid = request->arg("ssid");
-//    request->send(200, "text/html", Model::authorization(ssid));
-//  });
-//
-//  server.on("/switchRele2", HTTP_GET, [](AsyncWebServerRequest * request) {
-//    String ssid;
-//    if (request->hasArg("ssid"))
-//      ssid = request->arg("ssid");
-//    request->send(200, "text/html", Model::authorization(ssid));
-//  });
+  server.on("/changeInterval", HTTP_POST, [](AsyncWebServerRequest * request) {
+    int interval;
+    if (request->hasArg("interval"))
+      interval = request->arg("interval");
+    request->send(200, "text/html", Model::changeInterval(interval));
+  });
 
   server.on("/authorization", HTTP_POST, [](AsyncWebServerRequest * request) {
     String ssid;
@@ -101,5 +110,4 @@ void Controller::mapping() {
       password = request->arg("password");
     request->send(200, "text/html", Model::authorization(ssid, password));
   });
-
 }

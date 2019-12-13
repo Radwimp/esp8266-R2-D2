@@ -2,7 +2,6 @@
 
 const String espSsid = "ESP8266";
 const String espPassword = "12345678";
-int interval = 1000 * 60 * 1;
 unsigned long previousMillis;
 
 Model model;
@@ -16,7 +15,7 @@ void setup() {
 void loop() {
   unsigned long currentMillis = millis();
 
-  if ((unsigned long)(currentMillis - previousMillis) >= interval) {
+  if ((unsigned long)(currentMillis - previousMillis) >= Model::interval * 1000 * 60) {
     model.dataRecording();
     previousMillis = currentMillis;
   }
