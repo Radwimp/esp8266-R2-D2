@@ -78,6 +78,20 @@ void Controller::mapping() {
     request->send(200, "application/json", Model::getData());
   });
 
+//  server.on("/switchRele1", HTTP_GET, [](AsyncWebServerRequest * request) {
+//    String ssid;
+//    if (request->hasArg("ssid"))
+//      ssid = request->arg("ssid");
+//    request->send(200, "text/html", Model::authorization(ssid));
+//  });
+//
+//  server.on("/switchRele2", HTTP_GET, [](AsyncWebServerRequest * request) {
+//    String ssid;
+//    if (request->hasArg("ssid"))
+//      ssid = request->arg("ssid");
+//    request->send(200, "text/html", Model::authorization(ssid));
+//  });
+
   server.on("/authorization", HTTP_POST, [](AsyncWebServerRequest * request) {
     String ssid;
     String password;

@@ -10,7 +10,7 @@
 #include "DHTesp.h"
 
 #define DHTpin 3
-#define NUMBER_OF_RECORDS 96
+#define NUMBER_OF_RECORDS 60
 
 DHTesp dht;
 WiFiUDP ntpUDP;
@@ -21,21 +21,30 @@ int currentRecord;
 String Model::espSsid;
 String Model::espPassword;
 
+int relayPin1 = 16;
+int relayPin2 = 4;
+
 Controller controller;
 
 void Model::initialization (String espSsid, String espPassword) {
   Model::espSsid = espSsid;
   Model::espPassword = espPassword;
   this->checkSPIFFS();
-  
+
   if (!WiFi.status()) {
     WiFi.softAP(espSsid, espPassword);
   };
-  
+
   controller.initialization();
   timeClient.begin();
-  timeClient.setTimeOffset(3600*2);
+  timeClient.setTimeOffset(3600 * 2);
   dht.setup(DHTpin, DHTesp::DHT11);
+
+  pinMode(relayPin1, OUTPUT);
+  pinMode(relayPin2, OUTPUT);
+
+  digitalWrite(relayPin1, LOW);
+  digitalWrite(relayPin2, LOW);
 }
 
 void Model::checkSPIFFS() {
@@ -142,18 +151,18 @@ String Model::scanWiFi() {
   JsonArray networks = doc.createNestedArray("networks");
   int networksFound = WiFi.scanComplete();
 
-  if(networksFound == -2){
+  if (networksFound == -2) {
     WiFi.scanNetworks(true);
   } else if (networksFound) {
-    for (int i = 0; i < networksFound; ++i){
+    for (int i = 0; i < networksFound; ++i) {
       networks.add(WiFi.SSID(i));
     }
     WiFi.scanDelete();
-    if(WiFi.scanComplete() == -2){
+    if (WiFi.scanComplete() == -2) {
       WiFi.scanNetworks(true);
     }
   }
-    
+
   serializeJson(doc, json);
   return json;
 }
@@ -161,7 +170,7 @@ String Model::scanWiFi() {
 String Model::disconnectWiFi() {
   DynamicJsonDocument doc(32);
   String json;
-  
+
   if (WiFi.disconnect()) {
     doc["disconnectWiFi"] = "success";
     WiFi.softAP(Model::espSsid, Model::espPassword);
@@ -169,7 +178,7 @@ String Model::disconnectWiFi() {
     doc["disconnectWiFi"] = "fail";
   };
 
-  serializeJson(doc, json); 
+  serializeJson(doc, json);
   return json;
 }
 
@@ -196,3 +205,19 @@ String Model::restartESP() {
   ESP.restart();
   return json;
 }
+
+//String Model::switchRele1() {
+//  if (relayChecker == "true") {
+//    digitalWrite(relayPin1, HIGH);
+//  } else {
+//    digitalWrite(relayPin1, LOW);
+//  }
+//}
+//
+//String Model::switchRele2(String relayChecker) {
+//  if (relayChecker == "true") {
+//    digitalWrite(relayPin1, HIGH);
+//  } else {
+//    digitalWrite(relayPin1, LOW);
+//  }
+//}

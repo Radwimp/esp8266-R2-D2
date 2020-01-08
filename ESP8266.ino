@@ -2,7 +2,7 @@
 
 const String espSsid = "ESP8266";
 const String espPassword = "12345678";
-int interval = 1000 * 60 * 15;
+int interval = 1000 * 60 * 1;
 unsigned long previousMillis;
 
 Model model;
