@@ -18,8 +18,8 @@ class Model {
     static String authorization(String ssid, String password);
     static String restartESP();
     static String getData();
-    static void switchRelay(int pin, bool enable);
-    static void changeInterval(int interval);
+    static String switchRelay(int id, bool enable);
+    static String changeInterval(String interval);
   private:
     void checkSPIFFS();
     String convertToIsoTime(long timeStamp);

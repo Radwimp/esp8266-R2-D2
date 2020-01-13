@@ -3,12 +3,14 @@
 #include "Model.h"
 #include "View.h"
 #include "ESPAsyncWebServer.h"
+#include "ArduinoJson.h"
 
 AsyncWebServer server(80);
 
 void Controller::initialization () {
   this->mapping();
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+
   server.begin();
   Serial.println("end initialization");
 }
@@ -77,37 +79,39 @@ void Controller::mapping() {
   server.on("/getData", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "application/json", Model::getData());
   });
-  
-  server.on("/enableRelay1", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "application/json", Model::switchRelay(4, true));
-  });
-  
-  server.on("/disableRelay1", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "application/json", Model::switchRelay(4, false));
-  });
-  
-  server.on("/enableRelay2", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "application/json", Model::switchRelay(16, true));
-  });
-  
-  server.on("/disableRelay2", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "application/json", Model::switchRelay(16, false));
+
+  server.on("/switchRelay", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL,
+    [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+    const String json = (char*)data;
+    DynamicJsonDocument doc(512);
+    deserializeJson(doc, json);
+    const int id = doc["id"];
+    const bool enable = doc["enable"];
+
+    request->send(200, "application/json", Model::switchRelay(id, enable));
   });
 
   server.on("/changeInterval", HTTP_POST, [](AsyncWebServerRequest * request) {
-    int interval;
-    if (request->hasArg("interval"))
+    String interval;
+    
+    if (request->hasArg("interval")) {
       interval = request->arg("interval");
+    }
+    
     request->send(200, "text/html", Model::changeInterval(interval));
   });
 
   server.on("/authorization", HTTP_POST, [](AsyncWebServerRequest * request) {
     String ssid;
     String password;
-    if (request->hasArg("ssid"))
+    
+    if (request->hasArg("ssid")) {
       ssid = request->arg("ssid");
-    if (request->hasArg("password"))
+    }
+    
+    if (request->hasArg("password")) {
       password = request->arg("password");
+    }
     request->send(200, "text/html", Model::authorization(ssid, password));
   });
 }

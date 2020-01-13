@@ -10,17 +10,20 @@
 #include "DHTesp.h"
 
 #define DHTpin 3
-#define NUMBER_OF_RECORDS 60
+#define NUMBER_OF_RECORDS 10
 
 DHTesp dht;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
+IPAddress ip(192, 168, 0, 144);    
 
 String arrData[NUMBER_OF_RECORDS];
-int currentRecord;
 String Model::espSsid;
 String Model::espPassword;
+int currentRecord;
 int Model::interval = 1;
+int RelayPin0 = 4;
+int RelayPin1 = 16;
 
 Controller controller;
 
@@ -38,11 +41,11 @@ void Model::initialization (String espSsid, String espPassword) {
   timeClient.setTimeOffset(3600 * 2);
   dht.setup(DHTpin, DHTesp::DHT11);
 
-  pinMode(relayPin1, OUTPUT);
-  pinMode(relayPin2, OUTPUT);
+  pinMode(RelayPin0, OUTPUT);
+  pinMode(RelayPin1, OUTPUT);
 
-  digitalWrite(relayPin1, LOW);
-  digitalWrite(relayPin2, LOW);
+  digitalWrite(RelayPin0, LOW);
+  digitalWrite(RelayPin1, LOW);
 }
 
 void Model::checkSPIFFS() {
@@ -58,13 +61,13 @@ void Model::dataRecording() {
   long timeStamp = timeClient.getEpochTime();
   String statusInfo = dht.getStatusString();
   float humidity = dht.getHumidity();
-  float temperatures = dht.getTemperature();
+  float temperature = dht.getTemperature();
 
   DynamicJsonDocument doc(1024);
   doc["timeStamp"] = convertToIsoTime(timeStamp);
   doc["statusInfo"] = statusInfo;
   doc["humidity"] =  humidity;
-  doc["temperatures"] = temperatures;
+  doc["temperature"] = temperature;
 
   char jsonData[256];
   serializeJson(doc, jsonData);
@@ -204,10 +207,23 @@ String Model::restartESP() {
   return json;
 }
 
-void Model::switchRele(int pin, bool enable) {
-    digitalWrite(pin, enable ? HIGH : LOW);  
+String Model::switchRelay(int id, bool enable) {
+  DynamicJsonDocument doc(128);
+  String json;
+
+  digitalWrite(id ? RelayPin1 : RelayPin0, enable ? HIGH : LOW);
+  doc["id"] = id;
+  doc["enabled"] = enable;
+  serializeJson(doc, json);
+  return json;  
 }
 
-void Model::changeInterval(int interval) {
-  Model::interval = interval;
+String Model::changeInterval(String interval) {
+  DynamicJsonDocument doc(32);
+  String json;
+  
+//  Model::interval = interval;
+  doc["status"] = "success";
+  serializeJson(doc, json);
+  return json;  
 }
