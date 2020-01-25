@@ -14,15 +14,18 @@
 DHTesp dht;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
-IPAddress ip(192, 168, 0, 144);    
 
-String arrData[NUMBER_OF_RECORDS];
+bool Model::autoMode = true;
+int Model::interval = 3;
+int Model::desiredTemperature = 30;
 String Model::espSsid;
 String Model::espPassword;
+
+bool relayStatuses[2] = {false, false};
+int relayPins[2]= {4, 16};
 int currentRecord;
-int Model::interval = 1;
-int RelayPin0 = 4;
-int RelayPin1 = 16;
+int currentTemperature;
+String arrData[NUMBER_OF_RECORDS];
 
 Controller controller;
 
@@ -40,11 +43,11 @@ void Model::initialization (String espSsid, String espPassword) {
   timeClient.setTimeOffset(3600 * 2);
   dht.setup(DHTpin, DHTesp::DHT11);
 
-  pinMode(RelayPin0, OUTPUT);
-  pinMode(RelayPin1, OUTPUT);
+  pinMode(relayPins[0], OUTPUT);
+  pinMode(relayPins[1], OUTPUT);
 
-  digitalWrite(RelayPin0, LOW);
-  digitalWrite(RelayPin1, LOW);
+  digitalWrite(relayPins[0], LOW);
+  digitalWrite(relayPins[1], LOW);
 }
 
 void Model::checkSPIFFS() {
@@ -67,6 +70,7 @@ void Model::dataRecording() {
   doc["statusInfo"] = statusInfo;
   doc["humidity"] =  humidity;
   doc["temperature"] = temperature;
+  currentTemperature = temperature;
 
   char jsonData[256];
   serializeJson(doc, jsonData);
@@ -189,9 +193,29 @@ void Model::restartESP() {
 }
 
 void Model::switchRelay(int id, bool enable) {
-  digitalWrite(id ? RelayPin1 : RelayPin0, enable ? HIGH : LOW);
+  digitalWrite(relayPins[id], enable ? HIGH : LOW);
+  relayStatuses[id] = enable;
 }
 
-void Model::changeInterval(int interval) {
-  Model::interval = interval;
+void Model::climateControl() {
+  if (autoMode) {
+    if (Model::desiredTemperature < currentTemperature) {
+      Model::switchRelay(0, true);
+      Model::switchRelay(1, true);
+    } else if (Model::desiredTemperature > currentTemperature) {
+      Model::switchRelay(0, false);
+      Model::switchRelay(1, false);
+    }
+  }
+}
+
+String Model::getRelayStatuses() {
+  String json;
+  DynamicJsonDocument doc(64);
+  JsonArray statuses = doc.createNestedArray("statuses");
+  statuses.add(relayStatuses[0]);
+  statuses.add(relayStatuses[1]);
+
+  serializeJson(doc, json);
+  return json;
 }

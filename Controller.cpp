@@ -86,6 +86,26 @@ void Controller::mapping() {
     request->send(200, "application/json", Model::getData());
   });
 
+  server.on("/getRelayStatuses", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "application/json", Model::getRelayStatuses());
+  });
+
+  server.on("/authorization", HTTP_POST, [](AsyncWebServerRequest * request) {
+    String ssid;
+    String password;
+    
+    if (request->hasArg("ssid")) {
+      ssid = request->arg("ssid");
+    }
+    
+    if (request->hasArg("password")) {
+      password = request->arg("password");
+    }
+    
+    Model::authorization(ssid, password);
+    request->send(200);
+  });
+
   server.on("/switchRelay", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL,
     [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
     const String json = (char*)data;
@@ -103,25 +123,28 @@ void Controller::mapping() {
     const String json = (char*)data;
     DynamicJsonDocument doc(512);
     deserializeJson(doc, json);
-    const int interval = doc["interval"];
     
-    Model::changeInterval(interval);
+    Model::interval = doc["interval"];
     request->send(200);
   });
-
-  server.on("/authorization", HTTP_POST, [](AsyncWebServerRequest * request) {
-    String ssid;
-    String password;
+  
+  server.on("/changeDesiredTemperature", HTTP_POST, [](AsyncWebServerRequest * request) {}, NULL,
+    [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+    const String json = (char*)data;
+    DynamicJsonDocument doc(512);
+    deserializeJson(doc, json);
     
-    if (request->hasArg("ssid")) {
-      ssid = request->arg("ssid");
-    }
+    Model::desiredTemperature = doc["temperature"];
+    request->send(200);
+  });
+  
+  server.on("/setMode", HTTP_POST, [](AsyncWebServerRequest * request) {}, NULL,
+    [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+    const String json = (char*)data;
+    DynamicJsonDocument doc(512);
+    deserializeJson(doc, json);
     
-    if (request->hasArg("password")) {
-      password = request->arg("password");
-    }
-    
-    Model::authorization(ssid, password);
+    Model::autoMode = doc["autoMode"];
     request->send(200);
   });
 }

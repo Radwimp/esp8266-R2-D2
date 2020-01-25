@@ -17,6 +17,7 @@ void loop() {
 
   if ((unsigned long)(currentMillis - previousMillis) >= Model::interval * 1000 * 60) {
     model.dataRecording();
+    model.climateControl();
     previousMillis = currentMillis;
   }
 }
