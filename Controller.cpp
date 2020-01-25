@@ -17,7 +17,11 @@ void Controller::initialization () {
 
 void Controller::mapping() {
   server.onNotFound([](AsyncWebServerRequest * request) {
-    request->send(404);
+    if (request->method() == HTTP_OPTIONS) {
+      request->send(200);
+    } else {
+      request->send(404);
+    }
   });
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
@@ -65,7 +69,8 @@ void Controller::mapping() {
   });
 
   server.on("/disconnectWiFi", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "application/json", Model::disconnectWiFi());
+    Model::disconnectWiFi();
+    request->send(200);
   });
 
   server.on("/statusWiFi", HTTP_GET, [](AsyncWebServerRequest * request) {
@@ -73,7 +78,8 @@ void Controller::mapping() {
   });
 
   server.on("/restartESP", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(200, "application/json", Model::restartESP());
+    Model::restartESP();
+    request->send(200);
   });
 
   server.on("/getData", HTTP_GET, [](AsyncWebServerRequest * request) {
@@ -87,18 +93,20 @@ void Controller::mapping() {
     deserializeJson(doc, json);
     const int id = doc["id"];
     const bool enable = doc["enable"];
-
-    request->send(200, "application/json", Model::switchRelay(id, enable));
+    
+    Model::switchRelay(id, enable);
+    request->send(200);
   });
 
-  server.on("/changeInterval", HTTP_POST, [](AsyncWebServerRequest * request) {
-    String interval;
+  server.on("/changeInterval", HTTP_POST, [](AsyncWebServerRequest * request) {}, NULL,
+    [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+    const String json = (char*)data;
+    DynamicJsonDocument doc(512);
+    deserializeJson(doc, json);
+    const int interval = doc["interval"];
     
-    if (request->hasArg("interval")) {
-      interval = request->arg("interval");
-    }
-    
-    request->send(200, "text/html", Model::changeInterval(interval));
+    Model::changeInterval(interval);
+    request->send(200);
   });
 
   server.on("/authorization", HTTP_POST, [](AsyncWebServerRequest * request) {
@@ -112,6 +120,8 @@ void Controller::mapping() {
     if (request->hasArg("password")) {
       password = request->arg("password");
     }
-    request->send(200, "text/html", Model::authorization(ssid, password));
+    
+    Model::authorization(ssid, password);
+    request->send(200);
   });
 }

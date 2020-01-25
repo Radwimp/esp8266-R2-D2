@@ -1,10 +1,9 @@
-﻿#include "Arduino.h"
+#include "Arduino.h"
 #include "Model.h"
 #include "Controller.h"
 #include "ESP8266WiFi.h"
 #include "NTPClient.h"
 #include "WiFiUdp.h"
-#include "ESPAsyncTCP.h"
 #include "FS.h"
 #include "ArduinoJson.h"
 #include "DHTesp.h"
@@ -168,19 +167,8 @@ String Model::scanWiFi() {
   return json;
 }
 
-String Model::disconnectWiFi() {
-  DynamicJsonDocument doc(32);
-  String json;
-
-  if (WiFi.disconnect()) {
-    doc["disconnectWiFi"] = "success";
-    WiFi.softAP(Model::espSsid, Model::espPassword);
-  } else {
-    doc["disconnectWiFi"] = "fail";
-  };
-
-  serializeJson(doc, json);
-  return json;
+void Model::disconnectWiFi() {
+  WiFi.disconnect();
 }
 
 String Model::statusWiFi() {
@@ -191,39 +179,19 @@ String Model::statusWiFi() {
   return json;
 }
 
-String Model::authorization(String ssid, String password) {
+void Model::authorization(String ssid, String password) {
   WiFi.softAPdisconnect(true);
   WiFi.begin(ssid, password);
-  return "connection";
 }
 
-String Model::restartESP() {
-  DynamicJsonDocument doc(32);
-  String json;
-  doc["restart"] = "success";
-  serializeJson(doc, json);
-  Serial.println("restart");
+void Model::restartESP() {
   ESP.restart();
-  return json;
 }
 
-String Model::switchRelay(int id, bool enable) {
-  DynamicJsonDocument doc(128);
-  String json;
-
+void Model::switchRelay(int id, bool enable) {
   digitalWrite(id ? RelayPin1 : RelayPin0, enable ? HIGH : LOW);
-  doc["id"] = id;
-  doc["enabled"] = enable;
-  serializeJson(doc, json);
-  return json;  
 }
 
-String Model::changeInterval(String interval) {
-  DynamicJsonDocument doc(32);
-  String json;
-  
-//  Model::interval = interval;
-  doc["status"] = "success";
-  serializeJson(doc, json);
-  return json;  
+void Model::changeInterval(int interval) {
+  Model::interval = interval;
 }

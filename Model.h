@@ -13,13 +13,13 @@ class Model {
     static String getFreeMemory();
     static String getLocalIP();
     static String scanWiFi();
-    static String disconnectWiFi();
     static String statusWiFi();
-    static String authorization(String ssid, String password);
-    static String restartESP();
     static String getData();
-    static String switchRelay(int id, bool enable);
-    static String changeInterval(String interval);
+    static void disconnectWiFi();
+    static void authorization(String ssid, String password);
+    static void restartESP();
+    static void switchRelay(int id, bool enable);
+    static void changeInterval(int interval);
   private:
     void checkSPIFFS();
     String convertToIsoTime(long timeStamp);
