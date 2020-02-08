@@ -22,7 +22,7 @@ String Model::espSsid;
 String Model::espPassword;
 
 bool relayStatuses[2] = {false, false};
-int relayPins[2]= {4, 16};
+int relayPins[2]= {1, 16};
 int currentRecord;
 int currentTemperature;
 String arrData[NUMBER_OF_RECORDS];
@@ -33,6 +33,8 @@ void Model::initialization (String espSsid, String espPassword) {
   Model::espSsid = espSsid;
   Model::espPassword = espPassword;
   this->checkSPIFFS();
+
+  WiFi.begin("Marshmallow Justice", "11111111");
 
   if (!WiFi.status()) {
     WiFi.softAP(espSsid, espPassword);
@@ -193,16 +195,16 @@ void Model::restartESP() {
 }
 
 void Model::switchRelay(int id, bool enable) {
-  digitalWrite(relayPins[id], enable ? HIGH : LOW);
+  digitalWrite(relayPins[id], enable ? LOW : HIGH);
   relayStatuses[id] = enable;
 }
 
 void Model::climateControl() {
   if (autoMode) {
-    if (Model::desiredTemperature < currentTemperature) {
+    if (Model::desiredTemperature > currentTemperature) {
       Model::switchRelay(0, true);
       Model::switchRelay(1, true);
-    } else if (Model::desiredTemperature > currentTemperature) {
+    } else if (Model::desiredTemperature < currentTemperature) {
       Model::switchRelay(0, false);
       Model::switchRelay(1, false);
     }
