@@ -2,27 +2,31 @@
 #include "Model.h"
 #include "Controller.h"
 #include "ESP8266WiFi.h"
-#include "NTPClient.h"
 #include "WiFiUdp.h"
 #include "FS.h"
-#include "ArduinoJson.h"
-#include "DHTesp.h"
 
-#define DHTpin 3
+#define ONE_WIRE_BUS 5
 #define NUMBER_OF_RECORDS 10
 
 DHTesp dht;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
+IPAddress ip(192,168,0,144);
+IPAddress gateway(192,168,0,1);
+IPAddress subnet(255,255,255,0);
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature DS18B20(&oneWire);
 
-bool Model::autoMode = true;
-int Model::interval = 3;
+bool Model::autoMode = false;
+bool Model::relayStatuses[2] = {false, false};
+int Model::relayPins[2]= {1, 16};
+int Model::updateInterval = 180;
+int Model::enabledInterval = 10;
+int Model::disabledInterval = 5;
 int Model::desiredTemperature = 30;
 String Model::espSsid;
 String Model::espPassword;
 
-bool relayStatuses[2] = {false, false};
-int relayPins[2]= {1, 16};
 int currentRecord;
 int currentTemperature;
 String arrData[NUMBER_OF_RECORDS];
@@ -34,22 +38,23 @@ void Model::initialization (String espSsid, String espPassword) {
   Model::espPassword = espPassword;
   this->checkSPIFFS();
 
-  WiFi.begin("Marshmallow Justice", "11111111");
+  Model::authorization("Marshmallow Justice", "11111111");
 
   if (!WiFi.status()) {
     WiFi.softAP(espSsid, espPassword);
   };
 
+  DS18B20.begin();
   controller.initialization();
   timeClient.begin();
   timeClient.setTimeOffset(3600 * 2);
   dht.setup(DHTpin, DHTesp::DHT11);
 
-  pinMode(relayPins[0], OUTPUT);
-  pinMode(relayPins[1], OUTPUT);
+  pinMode(Model::relayPins[0], OUTPUT);
+  pinMode(Model::relayPins[1], OUTPUT);
 
-  digitalWrite(relayPins[0], LOW);
-  digitalWrite(relayPins[1], LOW);
+  digitalWrite(Model::relayPins[0], HIGH);
+  digitalWrite(Model::relayPins[1], HIGH);
 }
 
 void Model::checkSPIFFS() {
@@ -59,79 +64,6 @@ void Model::checkSPIFFS() {
   }
 }
 
-void Model::dataRecording() {
-  timeClient.update();
-
-  long timeStamp = timeClient.getEpochTime();
-  String statusInfo = dht.getStatusString();
-  float humidity = dht.getHumidity();
-  float temperature = dht.getTemperature();
-
-  DynamicJsonDocument doc(1024);
-  doc["timeStamp"] = convertToIsoTime(timeStamp);
-  doc["statusInfo"] = statusInfo;
-  doc["humidity"] =  humidity;
-  doc["temperature"] = temperature;
-  currentTemperature = temperature;
-
-  char jsonData[256];
-  serializeJson(doc, jsonData);
-
-  arrData[currentRecord] = jsonData;
-  currentRecord++;
-  if (currentRecord == NUMBER_OF_RECORDS) {
-    currentRecord = 0;
-  }
-}
-
-String Model::convertToIsoTime(long timeStamp) {
-  time_t rawtime = timeStamp;
-  struct tm * ti;
-  ti = localtime(&rawtime);
-
-  uint16_t year = ti->tm_year + 1900;
-  String yearStr = String(year);
-
-  uint8_t month = ti->tm_mon + 1;
-  String monthStr = month < 10 ? "0" + String(month) : String(month);
-
-  uint8_t day = ti->tm_mday;
-  String dayStr = day < 10 ? "0" + String(day) : String(day);
-
-  uint8_t hours = ti->tm_hour;
-  String hoursStr = hours < 10 ? "0" + String(hours) : String(hours);
-
-  uint8_t minutes = ti->tm_min;
-  String minuteStr = minutes < 10 ? "0" + String(minutes) : String(minutes);
-
-  uint8_t seconds = ti->tm_sec;
-  String secondStr = seconds < 10 ? "0" + String(seconds) : String(seconds);
-
-  return yearStr + "-" + monthStr + "-" + dayStr + " " +
-         hoursStr + ":" + minuteStr + ":" + secondStr;
-}
-
-String Model::getData() {
-  String json;
-  DynamicJsonDocument doc(10240);
-  JsonArray data = doc.createNestedArray("data");
-
-  for (int i = currentRecord; i < NUMBER_OF_RECORDS; i++) {
-    if (arrData[i] != NULL) {
-      data.add(arrData[i]);
-    }
-  }
-
-  for (int i = 0; i < currentRecord; i++) {
-    if (arrData[i] != NULL) {
-      data.add(arrData[i]);
-    }
-  }
-
-  serializeJson(doc, json);
-
-  return (json);
-}
 
 String Model::getLocalIP() {
   char wifiLocalIP[16];
@@ -175,6 +107,7 @@ String Model::scanWiFi() {
 
 void Model::disconnectWiFi() {
   WiFi.disconnect();
+  WiFi.softAP(espSsid, espPassword);
 }
 
 String Model::statusWiFi() {
@@ -188,6 +121,7 @@ String Model::statusWiFi() {
 void Model::authorization(String ssid, String password) {
   WiFi.softAPdisconnect(true);
   WiFi.begin(ssid, password);
+  WiFi.config(ip, gateway, subnet);
 }
 
 void Model::restartESP() {
@@ -195,28 +129,40 @@ void Model::restartESP() {
 }
 
 void Model::switchRelay(int id, bool enable) {
-  digitalWrite(relayPins[id], enable ? LOW : HIGH);
-  relayStatuses[id] = enable;
+  digitalWrite(Model::relayPins[id], enable ? LOW : HIGH);
+  Model::relayStatuses[id] = enable;
 }
 
 void Model::climateControl() {
-  if (autoMode) {
-    if (Model::desiredTemperature > currentTemperature) {
-      Model::switchRelay(0, true);
-      Model::switchRelay(1, true);
-    } else if (Model::desiredTemperature < currentTemperature) {
-      Model::switchRelay(0, false);
-      Model::switchRelay(1, false);
-    }
-  }
+//  if (autoMode) {
+//    if (Model::desiredTemperature > currentTemperature) {
+//      Model::switchRelay(0, true);
+//      Model::switchRelay(1, true);
+//    } else if (Model::desiredTemperature < currentTemperature) {
+//      Model::switchRelay(0, false);
+//      Model::switchRelay(1, false);
+//    }
+//  }
 }
 
 String Model::getRelayStatuses() {
   String json;
   DynamicJsonDocument doc(64);
   JsonArray statuses = doc.createNestedArray("statuses");
-  statuses.add(relayStatuses[0]);
-  statuses.add(relayStatuses[1]);
+  statuses.add(Model::relayStatuses[0]);
+  statuses.add(Model::relayStatuses[1]);
+
+  serializeJson(doc, json);
+  return json;
+}
+
+String Model::getIntervals() {
+  String json;
+  DynamicJsonDocument doc(64);
+  doc["update"] = Model::updateInterval;
+  doc["enabled"] = Model::enabledInterval;
+  doc["disabled"] = Model::disabledInterval;
+
 
   serializeJson(doc, json);
   return json;

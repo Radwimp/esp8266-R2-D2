@@ -8,7 +8,11 @@ class Model {
     void initialization(String ssid, String password);
     void dataRecording();
     static bool autoMode;
-    static int interval;
+    static bool relayStatuses[2];
+    static int relayPins[2];
+    static int updateInterval;
+    static int enabledInterval;
+    static int disabledInterval;
     static int desiredTemperature;
     static String espSsid;
     static String espPassword;
@@ -17,7 +21,9 @@ class Model {
     static String scanWiFi();
     static String statusWiFi();
     static String getData();
+    static String getTemperature();
     static String getRelayStatuses();
+    static String getIntervals();
     static void disconnectWiFi();
     static void authorization(String ssid, String password);
     static void restartESP();

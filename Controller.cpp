@@ -86,8 +86,16 @@ void Controller::mapping() {
     request->send(200, "application/json", Model::getData());
   });
 
+  server.on("/getTemperature", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "application/json", Model::getTemperature());
+  });
+
   server.on("/getRelayStatuses", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "application/json", Model::getRelayStatuses());
+  });
+
+  server.on("/getIntervals", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "application/json", Model::getIntervals());
   });
 
   server.on("/authorization", HTTP_POST, [](AsyncWebServerRequest * request) {
@@ -118,13 +126,15 @@ void Controller::mapping() {
     request->send(200);
   });
 
-  server.on("/changeInterval", HTTP_POST, [](AsyncWebServerRequest * request) {}, NULL,
+  server.on("/setIntervals", HTTP_POST, [](AsyncWebServerRequest * request) {}, NULL,
     [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
     const String json = (char*)data;
     DynamicJsonDocument doc(512);
     deserializeJson(doc, json);
     
-    Model::interval = doc["interval"];
+    Model::updateInterval = doc["update"];
+    Model::enabledInterval = doc["enabled"];
+    Model::disabledInterval = doc["disabled"];
     request->send(200);
   });
   
@@ -146,5 +156,5 @@ void Controller::mapping() {
     
     Model::autoMode = doc["autoMode"];
     request->send(200);
-  });
+  }); 
 }
